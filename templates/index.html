@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Recovery Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="p-4 md:p-8 flex items-center justify-center">
+
+  <div class="w-full max-w-3xl hydro-card rounded-2xl p-6 md:p-8 space-y-6">
+    <div class="border-b border-slate-800 pb-4 flex justify-between items-center">
+      <div>
+        <h1 class="text-xl md:text-2xl font-bold text-white">PDF Decryption Engine</h1>
+        <p class="text-xs text-slate-400">Deployed on Render Web Service</p>
+      </div>
+      <div class="h-3 w-3 bg-cyan-400 rounded-full animate-ping"></div>
+    </div>
+
+    <form id="crackForm" class="space-y-4">
+      <div>
+        <label class="block text-xs uppercase font-semibold text-slate-300 mb-2">Upload Encrypted PDF</label>
+        <input type="file" id="pdfFile" accept=".pdf" required class="hydro-input w-full p-3 rounded-xl text-xs">
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs uppercase font-semibold text-slate-300 mb-2">Mode</label>
+          <select id="mode" class="hydro-input w-full p-3 rounded-xl text-xs" onchange="toggleHint()">
+            <option value="mode1">Name + 4 Digits</option>
+            <option value="mode2">8-Digit Numeric</option>
+          </select>
+        </div>
+        <div id="hintContainer">
+          <label class="block text-xs uppercase font-semibold text-slate-300 mb-2">Name Hint</label>
+          <input type="text" id="hint" placeholder="e.g. VIKAS" class="hydro-input w-full p-3 rounded-xl text-xs uppercase">
+        </div>
+      </div>
+
+      <button type="submit" id="submitBtn" class="hydro-btn w-full py-3.5 rounded-xl text-white font-bold text-sm uppercase tracking-wider">
+        Execute Scan
+      </button>
+    </form>
+
+    <!-- LIVE CYBER TV SCREEN -->
+    <div id="tvContainer" class="hidden space-y-2">
+      <div class="flex justify-between items-center text-xs text-cyan-400 font-mono">
+        <span>[LIVE TERMINAL STREAM]</span>
+        <span id="scanStatus">SCANNING...</span>
+      </div>
+      <div class="cyber-tv rounded-xl p-4 h-56 overflow-y-auto text-xs text-cyan-300 space-y-1" id="terminalLog">
+        <div>> INIT SYSTEM ENGINE...</div>
+        <div>> CONNECTING TO RENDER BACKEND...</div>
+      </div>
+    </div>
+
+    <!-- RESULT DISPLAY -->
+    <div id="resultBox" class="hidden p-4 rounded-xl bg-slate-900 border border-cyan-500/40 text-center space-y-2">
+      <span class="text-xs text-slate-400 uppercase tracking-widest block">MATCH FOUND</span>
+      <span id="passResult" class="text-2xl font-mono font-bold text-cyan-300 block">--</span>
+    </div>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
