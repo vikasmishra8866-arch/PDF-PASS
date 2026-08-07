@@ -1,293 +1,270 @@
-import io
-import time
-import pikepdf
 import streamlit as st
+import pikepdf
+import io
 
-# ==========================================
-# PAGE CONFIG
-# ==========================================
+# --- PAGE CONFIG ---
 st.set_page_config(
-    page_title="ULTRA RECOVERY - PDF Password Recovery",
-    page_icon="🔓",
+    page_title="Deep Ocean Hydro | PDF Recovery",
+    page_icon="🔑",
     layout="centered"
 )
 
-# ==========================================
-# CUSTOM CSS (EXACT MANDATED STYLING)
-# ==========================================
+# --- DEEP OCEAN HYDRO STYLING (NEW DESIGN SYSTEM) ---
 st.markdown("""
-<style>
-    /* Main Background */
-    .stApp {
-        background: radial-gradient(circle, #1e213a 0%, #050505 100%) !important;
-        color: #ffffff !important;
-        font-family: 'Inter', sans-serif;
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif !important;
     }
 
-    /* Header Box */
-    .header-box {
-        background: rgba(255, 255, 255, 0.05);
-        border: 2px solid rgba(212, 175, 55, 0.4);
+    /* Primary Background Hydro Pulse */
+    .stApp {
+        background: linear-gradient(135deg, #031329 0%, #082247 50%, #031329 100%) !important;
+        background-size: 200% 200% !important;
+        animation: hydroPulse 10s ease infinite !important;
+        color: #f8fafc !important;
+    }
+
+    @keyframes hydroPulse {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    /* Card Containers */
+    div.stMarkdownContainer > div, .hydro-card {
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(12px) scale(0.98); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .hydro-header {
+        background-color: #0b1d3a;
+        border: 1px solid rgba(6, 182, 212, 0.3);
         border-radius: 16px;
         padding: 24px;
         text-align: center;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        margin-bottom: 25px;
+        margin-bottom: 24px;
+        box-shadow: 0 10px 25px -5px rgba(3, 19, 41, 0.7);
     }
 
-    .header-title {
-        color: #d4af37;
-        font-size: 40px;
-        font-weight: 800;
-        margin: 0;
+    .hydro-header-title {
+        color: #f8fafc;
+        font-size: 32px;
+        font-weight: 900;
         letter-spacing: 2px;
-        text-transform: uppercase;
-        text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        margin: 0;
     }
 
-    .header-subtext {
-        color: #e0e0e0;
-        font-size: 16px;
-        margin-top: 8px;
-        font-weight: 500;
+    .hydro-header-sub {
+        color: #06b6d4;
+        font-weight: 600;
+        font-size: 14px;
+        margin-top: 6px;
     }
 
-    /* RGB Animated Border Container */
-    @keyframes rgb-border {
-        0% { box-shadow: 0 0 15px #ff0000; border-color: #ff0000; }
-        33% { box-shadow: 0 0 15px #00ff00; border-color: #00ff00; }
-        66% { box-shadow: 0 0 15px #0000ff; border-color: #0000ff; }
-        100% { box-shadow: 0 0 15px #ff0000; border-color: #ff0000; }
-    }
-
-    .rgb-container {
-        border: 2px solid #ff0000;
+    .hydro-container {
+        background-color: #0b1d3a;
+        border: 1px solid rgba(6, 182, 212, 0.2);
         border-radius: 16px;
-        padding: 20px;
-        background: rgba(10, 10, 20, 0.6);
-        animation: rgb-border 4s infinite linear;
-        margin-bottom: 25px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        color: #94a3b8;
+        font-weight: 600;
+        font-size: 14px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Inputs Styling */
+    .stTextInput input {
+        background-color: #031329 !important;
+        color: #22d3ee !important;
+        border: 1px solid #1e3a8a !important;
+        border-radius: 12px !important;
+        height: 48px !important;
+        font-size: 18px !important;
+        font-weight: 800 !important;
+        letter-spacing: 1px !important;
+        padding-left: 14px !important;
+    }
+
+    .stTextInput input:focus {
+        border-color: #06b6d4 !important;
+        box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.4) !important;
     }
 
     /* Radio Buttons */
-    .stRadio > label {
-        color: #FFFFFF !important;
-        font-size: 18px !important;
-        font-weight: 700 !important;
-    }
-
-    div[role="radiogroup"] label {
-        color: #FFFF00 !important;
-        font-size: 22px !important;
-        font-weight: 900 !important;
-    }
-
-    /* Input Boxes Styling */
-    .stTextInput > div > div > input {
-        color: #FF0000 !important;
-        font-size: 24px !important;
-        font-weight: 900 !important;
-        border: 2px solid #FF0000 !important;
-        box-shadow: 0 0 10px rgba(255, 0, 0, 0.5) !important;
-        background-color: #0d0d1a !important;
-        border-radius: 10px !important;
-        text-align: center;
-    }
-
-    .stTextInput > label {
-        color: #FFFFFF !important;
+    div[data-testid="stRadio"] label {
+        color: #22d3ee !important;
         font-size: 16px !important;
-        font-weight: 600 !important;
-    }
-
-    /* File Uploader Customization */
-    .stFileUploader > label {
-        color: #FFFFFF !important;
-        font-size: 16px !important;
-        font-weight: 600 !important;
-    }
-
-    /* Primary Start Button */
-    .stButton > button {
-        width: 100% !important;
-        background: linear-gradient(90deg, #FF1493 0%, #00BFFF 100%) !important;
-        color: #FFFFFF !important;
-        font-size: 22px !important;
         font-weight: 800 !important;
+        cursor: pointer;
+    }
+    
+    div[data-testid="stRadio"] p {
+        color: #94a3b8 !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+    }
+
+    /* Primary Button */
+    div.stButton > button:first-child {
+        background: #06b6d4 !important;
+        color: #031329 !important;
         border: none !important;
+        font-weight: 900 !important;
+        font-size: 18px !important;
+        height: 52px !important;
         border-radius: 12px !important;
-        padding: 12px 24px !important;
-        box-shadow: 0 4px 15px rgba(255, 20, 147, 0.4) !important;
-        transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+        width: 100% !important;
+        transition: all 0.2s ease-in-out !important;
+        box-shadow: 0 0 15px rgba(6, 182, 212, 0.3) !important;
     }
 
-    .stButton > button:hover {
+    div.stButton > button:first-child:hover {
         transform: scale(1.02) !important;
-        box-shadow: 0 6px 20px rgba(0, 191, 255, 0.6) !important;
+        box-shadow: 0 0 22px rgba(6, 182, 212, 0.6) !important;
+        background: #22d3ee !important;
     }
-</style>
+
+    /* Print Protocol */
+    @media print {
+        .stButton, div[data-testid="stRadio"], .stFileUploader {
+            display: none !important;
+        }
+        .stApp {
+            background: #ffffff !important;
+            color: #000000 !important;
+        }
+    }
+    </style>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# HEADER SECTION
-# ==========================================
+# --- HEADER COMPONENT ---
 st.markdown("""
-<div class="header-box">
-    <div class="header-title">ULTRA RECOVERY</div>
-    <div class="header-subtext">💎 Managed by: VIKAS MISHRA</div>
-</div>
+    <div class="hydro-header">
+        <div class="hydro-header-title">PDF ULTRA RECOVERY</div>
+        <div class="hydro-header-sub">⚡ DEEP OCEAN HYDRO ENGINE</div>
+    </div>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# HARDCODED INDIAN NAMES DATABASE
-# ==========================================
-COMMON_INDIAN_PREFIXES = [
-    "AMIT", "ANIL", "KUMA", "MISH", "SING", "VIKA", "RAHU", "ROHI",
-    "RAJE", "POOJ", "NEHA", "PANK", "MANO", "SURA", "DEEP", "VIJA",
-    "AJAY", "SANT", "ALOK", "RAME", "SURE", "DINE", "MOKE", "RAKESH",
-    "NEER", "SUNI", "ANUP", "VIVE", "GAUR", "SACH", "AKAS", "ROHO",
-    "RITU", "PRIY", "KAPO", "SHAR", "VERM", "PATI", "YADA", "GUPT",
-    "JAIN", "CHAU", "AGAR", "TIWA", "DUBI", "SAHA", "MEHT", "JOSH",
-    "NAIR", "MENO", "PILL", "REDD", "RAO", "ROYA", "KHAN", "SHAH",
-    "DAS", "BOSE", "DUTT", "SEN", "PAL", "ROY", "MALH", "SETI",
-    "KHUR", "BAJA", "AROR", "BHAT", "CHAW", "KALA", "KAUR", "SING",
-    "PATE", "DESA", "JOSH", "KULK", "PATI", "PAWA", "THAK", "RANE",
-    "SHIN", "KADAM", "CHAV", "INGA", "MORE", "JADH", "GAIK", "SANT",
-    "BARR", "SARK", "MUKH", "BANER", "CHAT", "GANG", "GHOS", "BIHO",
-    "TIWA", "PANDE", "SHUK", "TRIP", "CRAV", "DWIV", "AVAS", "CHAT"
+# --- RECOVERY MODE SELECTION ---
+st.markdown('<div class="hydro-container">⚙️ RECOVERY SCAN PATTERN</div>', unsafe_allow_html=True)
+recovery_mode = st.radio("", ["Name + 4 Digits", "8-Digit Numbers Only"], horizontal=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# --- UPLOADER COMPONENT ---
+st.markdown('<div class="hydro-container">🛰️ SATELLITE SCANNER ACTIVE</div>', unsafe_allow_html=True)
+uploaded_file = st.file_uploader("", type=["pdf"], label_visibility="collapsed")
+
+custom_hint = ""
+if recovery_mode == "Name + 4 Digits":
+    st.markdown('<div class="hydro-container">💡 NAME HINT ENGINE</div>', unsafe_allow_html=True)
+    custom_hint = st.text_input("hint_input", placeholder="ENTER NAME HINT (E.G. VIKAS)", label_visibility="collapsed").strip()
+
+# --- HARDCODED DICTIONARY ARRAY ---
+COMMON_NAMES = [
+    "AMIT", "ANIL", "ARUN", "AJAY", "ABHI", "AKAS", "AMAN", "ANSH", "ANUP", "ASHU", 
+    "DEEP", "DEVA", "DINE", "GAUR", "GURU", "HARI", "HEMA", "INDU", "JAYA", "JAYE", 
+    "JYOT", "KAMA", "KAPI", "KIRA", "KUNA", "LALU", "MADH", "MANO", "MEEN", "MOHA", 
+    "MUKA", "NEER", "NITI", "PANK", "PAWA", "PIYU", "POOJ", "PRAD", "PRAK", "PRAM", 
+    "RAHU", "RAJA", "RAJE", "RAKE", "RAMA", "RANI", "RAVI", "RISH", "ROHA", "ROHI", 
+    "SACH", "SAME", "SANJ", "SANT", "SARA", "SATI", "SHIV", "SHYA", "SONU", "SUMI", 
+    "SUNI", "SURA", "TARA", "UMES", "VIKA", "VIMA", "VINA", "VINO", "VIVE", "YOGE", 
+    "KUMA", "SING", "MISH", "SHAR", "VERM", "GUPT", "YADA", "PATE", "CHAU", "KHAN",
+    "RAWA", "NEGI", "BISH", "SAIN", "DHIL", "SIDD", "KAUR", "BALA", "ALOK", "ASIF",
+    "BABU", "BALI", "BINK", "CHET", "DAKS", "ESHA", "FAIZ", "GOPL", "HARS", "ISHA",
+    "JNAT", "KAVS", "LOKS", "MAHE", "NARE", "OMPR", "PRAT", "QASH", "RASH", "SUDH"
 ]
 
-# ==========================================
-# RECOVERY CORE FUNCTIONS
-# ==========================================
-def verify_and_unlock(pdf_bytes: bytes, password: str):
-    """Verifies password validity with double saving check."""
-    try:
-        pdf = pikepdf.open(io.BytesIO(pdf_bytes), password=password)
-        test_output = io.BytesIO()
-        pdf.save(test_output)
-        test_output.seek(0)
-        return test_output
-    except Exception:
-        return None
-
-def generate_name_prefixes(name_hint: str):
-    """Generates 4-character sliding window prefixes."""
-    prefixes = set()
-    clean_name = name_hint.strip()
+# --- EXECUTION PIPELINE ---
+if uploaded_file and st.button("🚀 EXECUTE RECOVERY ENGINE"):
+    pdf_bytes = uploaded_file.read()
+    found = False
+    status_box = st.empty()
     
-    if len(clean_name) >= 4:
-        for i in range(len(clean_name) - 3):
-            chunk = clean_name[i:i+4]
-            prefixes.add(chunk.upper())
-            prefixes.add(chunk.lower())
-            prefixes.add(chunk.capitalize())
-    elif len(clean_name) > 0:
-        prefixes.add(clean_name.upper())
-        prefixes.add(clean_name.lower())
-        prefixes.add(clean_name.capitalize())
-        
-    for p in COMMON_INDIAN_PREFIXES:
-        prefixes.add(p)
-        prefixes.add(p.lower())
-
-    return list(prefixes)
-
-# ==========================================
-# UI & MAIN APPLICATON LAYOUT
-# ==========================================
-st.markdown('<div class="rgb-container">', unsafe_allow_html=True)
-
-uploaded_file = st.file_uploader("Upload Password Protected PDF File", type=["pdf"])
-
-mode = st.radio(
-    "SELECT RECOVERY MODE:",
-    options=["Name + 4 Digits", "8-Digit Numbers Only"]
-)
-
-name_hint = ""
-if mode == "Name + 4 Digits":
-    name_hint = st.text_input("ENTER NAME HINT (e.g. Vikas):", value="")
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-start_recovery = st.button("🚀 START ULTRA RECOVERY PROCESS")
-
-# ==========================================
-# RECOVERY EXECUTION CONTROLLER
-# ==========================================
-if start_recovery:
-    if not uploaded_file:
-        st.error("❌ Please upload a protected PDF file first.")
-    else:
-        pdf_bytes = uploaded_file.read()
-        status_box = st.empty()
-        progress_bar = st.progress(0)
-        
-        found_password = None
-        unlocked_pdf_stream = None
-        start_time = time.time()
-
-        if mode == "Name + 4 Digits":
-            prefixes = generate_name_prefixes(name_hint)
-            total_prefixes = len(prefixes)
-            total_combinations = total_prefixes * 10000
-            tested_count = 0
-
-            status_box.info(f"🔍 Starting scan with {total_prefixes} prefix patterns (~{total_combinations:,} combinations)...")
-
-            for prefix in prefixes:
-                for num in range(10000):
-                    tested_count += 1
-                    pwd = f"{prefix}{num:04d}"
-
-                    if tested_count % 2000 == 0:
-                        elapsed = time.time() - start_time
-                        speed = int(tested_count / elapsed) if elapsed > 0 else 0
-                        progress_bar.progress(min(tested_count / total_combinations, 1.0))
-                        status_box.text(f"⏳ Testing: {pwd} | Tested: {tested_count:,} / {total_combinations:,} | Speed: {speed} pwd/s")
-
-                    unlocked_stream = verify_and_unlock(pdf_bytes, pwd)
-                    if unlocked_stream:
-                        found_password = pwd
-                        unlocked_pdf_stream = unlocked_stream
-                        break
-                if found_password:
-                    break
-
-        elif mode == "8-Digit Numbers Only":
-            total_combinations = 100000000
-            status_box.info("🔢 Starting 8-Digit Sequential Brute-Force (00000000 to 99999999)...")
-
-            for num in range(total_combinations):
-                pwd = f"{num:08d}"
-
-                if num % 2000 == 0:
-                    elapsed = time.time() - start_time
-                    speed = int(num / elapsed) if elapsed > 0 else 0
-                    progress_bar.progress(min(num / total_combinations, 1.0))
-                    status_box.text(f"⏳ Testing: {pwd} | Tested: {num:,} / {total_combinations:,} | Speed: {speed} pwd/s")
-
-                unlocked_stream = verify_and_unlock(pdf_bytes, pwd)
-                if unlocked_stream:
-                    found_password = pwd
-                    unlocked_pdf_stream = unlocked_stream
-                    break
-
-        progress_bar.progress(1.0)
-
-        if found_password and unlocked_pdf_stream:
-            status_box.empty()
-            st.balloons()
-            st.success(f"🎉 **PASSWORD FOUND SUCCESSFULLY!**\n\nVerified Password: `{found_password}`")
+    try:
+        if recovery_mode == "Name + 4 Digits":
+            search_list = []
+            if custom_hint and len(custom_hint) >= 4:
+                for i in range(len(custom_hint) - 3):
+                    chunk = custom_hint[i:i+4]
+                    search_list.extend([chunk, chunk.upper(), chunk.lower()])
             
-            st.download_button(
-                label="📥 DOWNLOAD UNLOCKED PDF",
-                data=unlocked_pdf_stream.getvalue(),
-                file_name=f"unlocked_{uploaded_file.name}",
-                mime="application/pdf"
-            )
-        else:
-            status_box.empty()
-            st.error("❌ Recovery Failed. Password not found within the selected mode criteria.")
+            for name in COMMON_NAMES:
+                if name not in search_list:
+                    search_list.extend([name, name.lower()])
+            
+            search_list = list(dict.fromkeys(search_list))
+            bar = st.progress(0)
+            
+            for idx, prefix in enumerate(search_list):
+                status_box.markdown(f"📡 **Scanning:** `{prefix}XXXX`...")
+                bar.progress((idx + 1) / len(search_list))
+                
+                for n in range(10000):
+                    password = f"{prefix}{n:04d}"
+                    try:
+                        with pikepdf.open(io.BytesIO(pdf_bytes), password=password) as pdf:
+                            test_output = io.BytesIO()
+                            pdf.save(test_output)
+                            
+                            st.balloons()
+                            st.success(f"🔓 VERIFIED MATCH FOUND: {password}")
+                            found = True
+                            st.download_button(
+                                "📥 DOWNLOAD UNLOCKED PDF",
+                                test_output.getvalue(),
+                                f"Unlocked_{password}.pdf"
+                            )
+                            break
+                    except:
+                        continue
+                if found:
+                    break
+
+        else: # 8-Digit Mode
+            status_box.info("📡 Running 8-Digit Scan...")
+            for n in range(100000000):
+                password = f"{n:08d}"
+                if n % 2000 == 0:
+                    status_box.markdown(f"📡 **Testing:** `{password}`...")
+                try:
+                    with pikepdf.open(io.BytesIO(pdf_bytes), password=password) as pdf:
+                        test_output = io.BytesIO()
+                        pdf.save(test_output)
+                        
+                        st.balloons()
+                        st.success(f"🔓 VERIFIED MATCH FOUND: {password}")
+                        found = True
+                        st.download_button(
+                            "📥 DOWNLOAD UNLOCKED PDF",
+                            test_output.getvalue(),
+                            f"Unlocked_{password}.pdf"
+                        )
+                        break
+                except:
+                    continue
+                if found:
+                    break
+
+        if not found:
+            st.error("❌ Password not found or scan failed.")
+
+    except Exception as e:
+        st.error(f"Execution Error: {e}")
+
+st.markdown("""
+    <script>
+    function sendHeight() {
+        var height = document.body.scrollHeight;
+        parent.postMessage({ type: 'resize', height: height }, '*');
+    }
+    window.addEventListener('load', sendHeight);
+    window.addEventListener('resize', sendHeight);
+    </script>
+""", unsafe_allow_html=True)
