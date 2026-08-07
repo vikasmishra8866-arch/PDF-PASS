@@ -1,14 +1,12 @@
 import os
 import io
 import time
-import pikepdf
-from flask import Flask, request, jsonify, render_template, send_file
-from werkzeug.utils import secure_filename
+import pypdf
+from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limit uploads to 16MB
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
-# Common surnames dictionary for Mode 1
 HARDCODED_DICT = [
     "AMIT", "ANIL", "KUMA", "MISH", "SING", "VIKA", "PATE", "GUPT", "YADA", "VERM",
     "SHAR", "RAME", "SURE", "RAJE", "DINE", "MANT", "JOSH", "ROHI", "RAHU", "GAUR"
@@ -23,9 +21,27 @@ def generate_mode1_prefixes(hint):
     for d in HARDCODED_DICT:
         prefixes.extend([d.upper(), d.lower()])
     
-    # Deduplicate preserving order
     seen = set()
     return [x for x in prefixes if not (x in seen or seen.add(x))]
+
+def check_pdf_password(pdf_bytes, password):
+    try:
+        reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
+        if reader.is_encrypted:
+            # decrypt returns True (or 1/2) if password is correct
+            if reader.decrypt(password):
+                writer = pypdf.PdfWriter()
+                for page in reader.pages:
+                    writer.add_page(page)
+                out = io.BytesIO()
+                writer.write(out)
+                out.seek(0)
+                return True, out.getvalue()
+            return False, None
+        else:
+            return True, pdf_bytes
+    except Exception:
+        return False, None
 
 @app.route('/')
 def index():
@@ -44,52 +60,34 @@ def crack_pdf():
         return jsonify({"status": "error", "message": "No file selected"}), 400
 
     pdf_bytes = file.read()
-    
-    # Brute-force execution logic
     matched_password = None
-    unlocked_stream = None
-    
     start_time = time.time()
     
     if mode == 'mode1':
         prefixes = generate_mode1_prefixes(hint)
         for prefix in prefixes:
             for i in range(10000):
-                # Timeout safeguard for Render web workers
                 if time.time() - start_time > 110:
-                    return jsonify({"status": "error", "message": "Execution limit reached. Try a specific hint."}), 408
+                    return jsonify({"status": "error", "message": "Execution time limit reached."}), 408
                 
                 pwd = f"{prefix}{i:04d}"
-                try:
-                    with pikepdf.open(io.BytesIO(pdf_bytes), password=pwd) as pdf:
-                        out = io.BytesIO()
-                        pdf.save(out)
-                        out.seek(0)
-                        matched_password = pwd
-                        unlocked_stream = out.getvalue()
-                        break
-                except pikepdf.PasswordError:
-                    continue
+                success, _ = check_pdf_password(pdf_bytes, pwd)
+                if success:
+                    matched_password = pwd
+                    break
             if matched_password:
                 break
                 
     elif mode == 'mode2':
-        # Limited numeric loop to prevent Web Service timeout
         for i in range(1000000): 
             if time.time() - start_time > 110:
-                return jsonify({"status": "error", "message": "Time limit exceeded"}), 408
+                return jsonify({"status": "error", "message": "Execution time limit reached."}), 408
                 
             pwd = f"{i:08d}"
-            try:
-                with pikepdf.open(io.BytesIO(pdf_bytes), password=pwd) as pdf:
-                    out = io.BytesIO()
-                    pdf.save(out)
-                    out.seek(0)
-                    matched_password = pwd
-                    unlocked_stream = out.getvalue()
-                    break
-            except pikepdf.PasswordError:
-                continue
+            success, _ = check_pdf_password(pdf_bytes, pwd)
+            if success:
+                matched_password = pwd
+                break
 
     if matched_password:
         return jsonify({
