@@ -1,3 +1,0 @@
-streamlit
-pikepdf
-gunicorn==21.2.0
